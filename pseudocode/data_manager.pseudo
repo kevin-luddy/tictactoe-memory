@@ -1,0 +1,92 @@
+PROGRAM TicTacToeGame
+BEGIN
+    DECLARE CONSTANT BOARD_SIZE = 9
+    DECLARE CONSTANT WIN_PATTERNS = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8],  // Rows
+        [0, 3, 6], [1, 4, 7], [2, 5, 8],  // Columns
+        [0, 4, 8], [2, 4, 6]              // Diagonals
+    ]
+
+    DECLARE board AS ARRAY[9] OF Mark  // EMPTY, X, or O
+    DECLARE state AS GameState
+    DECLARE difficulty AS Difficulty
+    DECLARE countdownSeconds AS INTEGER
+    DECLARE boardVisible AS BOOLEAN
+
+    FUNCTION Reset()
+    BEGIN
+        FOR i = 0 TO 8
+            board[i] = EMPTY
+        END FOR
+        state = IDLE
+        boardVisible = TRUE
+    END
+
+    FUNCTION SetDifficulty(diff)
+    BEGIN
+        difficulty = diff
+        IF diff == EASY THEN
+            countdownSeconds = 10
+        ELSE IF diff == MEDIUM THEN
+            countdownSeconds = 5
+        ELSE IF diff == HARD THEN
+            countdownSeconds = 1
+        END IF
+    END
+
+    FUNCTION PlaceMark(position, mark)
+    BEGIN
+        IF position >= 0 AND position < 9 THEN
+            IF board[position] == EMPTY THEN
+                board[position] = mark
+                RETURN TRUE
+            END IF
+        END IF
+        RETURN FALSE
+    END
+
+    FUNCTION CheckWin(mark) RETURNS BOOLEAN
+    BEGIN
+        FOR EACH pattern IN WIN_PATTERNS
+            IF board[pattern[0]] == mark AND
+               board[pattern[1]] == mark AND
+               board[pattern[2]] == mark THEN
+                RETURN TRUE
+            END IF
+        END FOR
+        RETURN FALSE
+    END
+
+    FUNCTION GetWinningCells(mark) RETURNS ARRAY
+    BEGIN
+        FOR EACH pattern IN WIN_PATTERNS
+            IF board[pattern[0]] == mark AND
+               board[pattern[1]] == mark AND
+               board[pattern[2]] == mark THEN
+                RETURN pattern
+            END IF
+        END FOR
+        RETURN EMPTY_ARRAY
+    END
+
+    FUNCTION IsBoardFull() RETURNS BOOLEAN
+    BEGIN
+        FOR i = 0 TO 8
+            IF board[i] == EMPTY THEN
+                RETURN FALSE
+            END IF
+        END FOR
+        RETURN TRUE
+    END
+
+    FUNCTION GetEmptyPositions() RETURNS ARRAY
+    BEGIN
+        DECLARE positions AS ARRAY
+        FOR i = 0 TO 8
+            IF board[i] == EMPTY THEN
+                positions.Add(i)
+            END IF
+        END FOR
+        RETURN positions
+    END
+END

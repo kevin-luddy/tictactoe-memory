@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TicTacToe Memory Challenge</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard', cursive, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: white;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 5px;
+            text-shadow: 3px 3px 0 rgba(0,0,0,0.2);
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 15px;
+        }
+
+        /* Stats Display */
+        .stats-display {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+            padding: 12px 25px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.8);
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .stat-value.streak {
+            color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .stat-value.best {
+            color: #7fff00;
+        }
+
+        /* Difficulty Selector */
+        .difficulty-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+        }
+
+        .difficulty-selector label {
+            color: rgba(255,255,255,0.9);
+            display: flex;
+            align-items: center;
+            margin-right: 5px;
+        }
+
+        .difficulty-btn {
+            padding: 8px 20px;
+            border: 2px solid transparent;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-family: inherit;
+        }
+
+        .difficulty-btn:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .difficulty-btn.active {
+            transform: scale(1.05);
+        }
+
+        .difficulty-btn.easy.active {
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.5);
+        }
+
+        .difficulty-btn.medium.active {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.5);
+        }
+
+        .difficulty-btn.hard.active {
+            background: linear-gradient(135deg, #f87171, #ef4444);
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+        }
+
+        /* Countdown Display */
+        .countdown-container {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .countdown-label {
+            font-size: 1rem;
+            margin-bottom: 5px;
+        }
+
+        .countdown {
+            font-size: 4rem;
+            font-weight: bold;
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            margin: 0 auto;
+            transition: all 0.3s ease;
+        }
+
+        .countdown.warning {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+            animation: pulse 0.5s infinite;
+        }
+
+        .countdown.hidden {
+            opacity: 0;
+            transform: scale(0);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* Message Display */
+        #message {
+            font-size: 1.3rem;
+            margin: 10px 0;
+            padding: 12px 25px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            min-width: 300px;
+            text-align: center;
+            backdrop-filter: blur(5px);
+        }
+
+        #message.win {
+            background: linear-gradient(90deg, rgba(255, 215, 0, 0.4), rgba(255, 165, 0, 0.4));
+            animation: celebrate 0.5s infinite alternate;
+        }
+
+        @keyframes celebrate {
+            from { transform: scale(1) rotate(-1deg); }
+            to { transform: scale(1.02) rotate(1deg); }
+        }
+
+        /* Game Board */
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 120px);
+            grid-template-rows: repeat(3, 120px);
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 20px;
+            margin: 15px 0;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .cell {
+            width: 120px;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 15px;
+            font-size: 4rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            color: #333;
+        }
+
+        .cell:hover:not(:disabled) {
+            transform: scale(1.05);
+            background: white;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+
+        .cell:disabled {
+            cursor: not-allowed;
+        }
+
+        .cell.x {
+            color: #e74c3c;
+        }
+
+        .cell.o {
+            color: #3498db;
+        }
+
+        .cell.winning {
+            animation: winGlow 0.5s infinite alternate;
+            background: linear-gradient(135deg, #ffd700, #ffed4a);
+        }
+
+        @keyframes winGlow {
+            from { box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
+            to { box-shadow: 0 0 40px rgba(255, 215, 0, 0.8); }
+        }
+
+        /* Invisible mode - pieces fade out */
+        .cell.invisible .mark {
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .cell .mark {
+            transition: opacity 0.5s ease;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        #new-game-btn {
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+            color: white;
+        }
+
+        #new-game-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(34, 197, 94, 0.4);
+        }
+
+        #sound-toggle {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            width: 50px;
+            height: 50px;
+            padding: 0;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #sound-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Memory warning overlay */
+        .memory-warning {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 30px 50px;
+            border-radius: 20px;
+            font-size: 1.5rem;
+            z-index: 100;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .memory-warning.show {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <h1>TicTacToe Memory</h1>
+    <p class="subtitle">Remember where the pieces are!</p>
+
+    <div class="stats-display">
+        <div class="stat-item">
+            <span class="stat-label">Win Streak</span>
+            <span id="win-streak" class="stat-value streak">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Best</span>
+            <span id="best-streak" class="stat-value best">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Wins</span>
+            <span id="games-won" class="stat-value">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Games</span>
+            <span id="games-played" class="stat-value">0</span>
+        </div>
+    </div>
+
+    <div class="difficulty-selector">
+        <label>Difficulty:</label>
+        <button class="difficulty-btn easy active" data-difficulty="easy">Easy (10s)</button>
+        <button class="difficulty-btn medium" data-difficulty="medium">Medium (5s)</button>
+        <button class="difficulty-btn hard" data-difficulty="hard">Hard (1s)</button>
+    </div>
+
+    <div class="countdown-container">
+        <div class="countdown-label">Time until pieces vanish:</div>
+        <div id="countdown" class="countdown">10</div>
+    </div>
+
+    <div id="message">Click a cell to start playing!</div>
+
+    <div class="board" id="board">
+        <!-- Cells generated by JS -->
+    </div>
+
+    <div class="controls">
+        <button id="new-game-btn" class="btn">New Game</button>
+        <button id="sound-toggle" class="btn" title="Toggle Sound">🔊</button>
+    </div>
+
+    <div id="memory-warning" class="memory-warning">
+        🧠 Pieces are invisible! Use your memory! 🧠
+    </div>
+
+    <script>
+        // Game state
+        let gameState = null;
+        let countdownInterval = null;
+        let currentCountdown = 10;
+        let boardInvisible = false;
+        let currentDifficulty = 'easy';
+
+        // Sound Manager with kid-friendly sounds
+        class SoundManager {
+            constructor() {
+                this.enabled = true;
+                this.audioContext = null;
+            }
+
+            init() {
+                if (!this.audioContext) {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+
+            playTone(frequency, duration, type = 'sine', volume = 0.3) {
+                if (!this.enabled) return;
+                this.init();
+
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(this.audioContext.destination);
+
+                oscillator.frequency.value = frequency;
+                oscillator.type = type;
+
+                gainNode.gain.setValueAtTime(volume, this.audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
+
+                oscillator.start(this.audioContext.currentTime);
+                oscillator.stop(this.audioContext.currentTime + duration);
+            }
+
+            playPlace() {
+                // Fun pop sound
+                this.playTone(600, 0.1, 'sine', 0.4);
+                setTimeout(() => this.playTone(800, 0.1, 'sine', 0.3), 50);
+            }
+
+            playComputerPlace() {
+                // Different sound for computer
+                this.playTone(400, 0.1, 'triangle', 0.3);
+                setTimeout(() => this.playTone(500, 0.15, 'triangle', 0.2), 80);
+            }
+
+            playTick() {
+                // Soft tick
+                this.playTone(880, 0.05, 'sine', 0.2);
+            }
+
+            playWarningTick() {
+                // Urgent tick for last 3 seconds
+                this.playTone(1200, 0.1, 'square', 0.25);
+            }
+
+            playVanish() {
+                // Magical disappear sound
+                this.init();
+                for (let i = 0; i < 5; i++) {
+                    setTimeout(() => {
+                        this.playTone(800 - i * 100, 0.1, 'sine', 0.2 - i * 0.03);
+                    }, i * 50);
+                }
+            }
+
+            playWin() {
+                // Cheerful victory fanfare!
+                const notes = [523, 659, 784, 1047]; // C E G C
+                notes.forEach((note, i) => {
+                    setTimeout(() => this.playTone(note, 0.3, 'sine', 0.4), i * 150);
+                });
+                // Add sparkle
+                setTimeout(() => {
+                    for (let i = 0; i < 8; i++) {
+                        setTimeout(() => this.playTone(1500 + Math.random() * 500, 0.1, 'sine', 0.2), i * 50);
+                    }
+                }, 600);
+            }
+
+            playLose() {
+                // Gentle, encouraging "aww" sound
+                this.playTone(400, 0.2, 'sine', 0.3);
+                setTimeout(() => this.playTone(350, 0.2, 'sine', 0.25), 200);
+                setTimeout(() => this.playTone(300, 0.3, 'sine', 0.2), 400);
+            }
+
+            playDraw() {
+                // Neutral "hmm" sound
+                this.playTone(440, 0.15, 'triangle', 0.3);
+                setTimeout(() => this.playTone(440, 0.15, 'triangle', 0.25), 200);
+            }
+
+            playNewGame() {
+                // Fresh start sound
+                this.playTone(440, 0.1, 'sine', 0.3);
+                setTimeout(() => this.playTone(550, 0.1, 'sine', 0.3), 100);
+                setTimeout(() => this.playTone(660, 0.15, 'sine', 0.3), 200);
+            }
+
+            playClick() {
+                this.playTone(500, 0.05, 'sine', 0.2);
+            }
+
+            toggle() {
+                this.enabled = !this.enabled;
+                return this.enabled;
+            }
+        }
+
+        const soundManager = new SoundManager();
+
+        // Initialize board
+        function initBoard() {
+            const board = document.getElementById('board');
+            board.innerHTML = '';
+            for (let i = 0; i < 9; i++) {
+                const cell = document.createElement('button');
+                cell.className = 'cell';
+                cell.dataset.position = i;
+                cell.innerHTML = '<span class="mark"></span>';
+                cell.addEventListener('click', () => handleCellClick(i));
+                board.appendChild(cell);
+            }
+        }
+
+        // Fetch current state
+        async function fetchState() {
+            try {
+                const response = await fetch('/api/state');
+                gameState = await response.json();
+                updateUI();
+            } catch (error) {
+                console.error('Error fetching state:', error);
+            }
+        }
+
+        // Update UI from game state
+        function updateUI(playEndSound = false) {
+            if (!gameState) return;
+
+            const { board, state, difficulty, countdown_seconds, board_visible,
+                    winner, winning_cells, win_streak, best_streak, games_played, games_won } = gameState;
+
+            // Update stats
+            document.getElementById('win-streak').textContent = win_streak;
+            document.getElementById('best-streak').textContent = best_streak;
+            document.getElementById('games-won').textContent = games_won;
+            document.getElementById('games-played').textContent = games_played;
+
+            // Update difficulty buttons
+            currentDifficulty = difficulty;
+            document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.difficulty === difficulty) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // Update board cells
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach((cell, i) => {
+                const mark = board[i];
+                const markSpan = cell.querySelector('.mark');
+                markSpan.textContent = mark;
+
+                cell.classList.remove('x', 'o', 'winning', 'invisible');
+
+                if (mark === 'X') {
+                    cell.classList.add('x');
+                } else if (mark === 'O') {
+                    cell.classList.add('o');
+                }
+
+                // Handle invisibility
+                if (!board_visible && state === 'invisible') {
+                    cell.classList.add('invisible');
+                }
+
+                // Highlight winning cells
+                if (winning_cells && winning_cells.includes(i)) {
+                    cell.classList.add('winning');
+                }
+
+                // Disable cells based on game state
+                const isGameOver = ['player_wins', 'computer_wins', 'draw'].includes(state);
+                const isPlayerTurn = ['player_turn', 'invisible'].includes(state);
+                cell.disabled = !isPlayerTurn || mark !== '' || isGameOver;
+            });
+
+            // Update message
+            const messageEl = document.getElementById('message');
+            messageEl.classList.remove('win');
+
+            if (state === 'player_wins') {
+                messageEl.textContent = '🎉 You Win! Great memory! 🎉';
+                messageEl.classList.add('win');
+                if (playEndSound) soundManager.playWin();
+            } else if (state === 'computer_wins') {
+                messageEl.textContent = '🤖 Computer wins! Try again! 💪';
+                if (playEndSound) soundManager.playLose();
+            } else if (state === 'draw') {
+                messageEl.textContent = "🤝 It's a Draw! Good game! 🤝";
+                if (playEndSound) soundManager.playDraw();
+            } else if (state === 'invisible') {
+                messageEl.textContent = '🧠 Pieces invisible! Use your memory!';
+            } else if (state === 'computer_turn') {
+                messageEl.textContent = '🤔 Computer is thinking...';
+            } else if (state === 'player_turn') {
+                messageEl.textContent = '👆 Your turn! Watch the countdown!';
+            }
+
+            // Handle countdown visibility
+            const countdownEl = document.getElementById('countdown');
+            const isGameOver = ['player_wins', 'computer_wins', 'draw'].includes(state);
+
+            if (isGameOver || state === 'computer_turn') {
+                countdownEl.classList.add('hidden');
+                stopCountdown();
+            } else if (state === 'player_turn') {
+                countdownEl.classList.remove('hidden');
+                if (!countdownInterval) {
+                    startCountdown(countdown_seconds);
+                }
+            } else if (state === 'invisible') {
+                countdownEl.classList.add('hidden');
+            }
+
+            // Update memory warning
+            const warningEl = document.getElementById('memory-warning');
+            if (state === 'invisible') {
+                warningEl.classList.add('show');
+            } else {
+                warningEl.classList.remove('show');
+            }
+        }
+
+        // Countdown functions
+        function startCountdown(seconds) {
+            stopCountdown();
+            currentCountdown = seconds;
+            updateCountdownDisplay();
+
+            countdownInterval = setInterval(() => {
+                currentCountdown--;
+                updateCountdownDisplay();
+
+                if (currentCountdown <= 3 && currentCountdown > 0) {
+                    soundManager.playWarningTick();
+                } else if (currentCountdown > 3) {
+                    soundManager.playTick();
+                }
+
+                if (currentCountdown <= 0) {
+                    stopCountdown();
+                    triggerInvisibility();
+                }
+            }, 1000);
+        }
+
+        function stopCountdown() {
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+            }
+        }
+
+        function updateCountdownDisplay() {
+            const countdownEl = document.getElementById('countdown');
+            countdownEl.textContent = currentCountdown;
+
+            if (currentCountdown <= 3) {
+                countdownEl.classList.add('warning');
+            } else {
+                countdownEl.classList.remove('warning');
+            }
+        }
+
+        async function triggerInvisibility() {
+            soundManager.playVanish();
+            boardInvisible = true;
+
+            try {
+                const response = await fetch('/api/set-invisible', { method: 'POST' });
+                gameState = await response.json();
+                updateUI();
+            } catch (error) {
+                console.error('Error setting invisible:', error);
+            }
+        }
+
+        // Handle cell click
+        async function handleCellClick(position) {
+            if (!gameState) return;
+
+            const { state, board } = gameState;
+            if (!['player_turn', 'invisible'].includes(state)) return;
+            if (board[position] !== '') return;
+
+            soundManager.playPlace();
+            stopCountdown();
+            boardInvisible = false;
+
+            try {
+                const response = await fetch('/api/move', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ position })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    console.error('Move error:', error);
+                    return;
+                }
+
+                gameState = await response.json();
+                const isWin = gameState.state === 'player_wins';
+                const isDraw = gameState.state === 'draw';
+                updateUI(isWin || isDraw);
+
+                // If game continues, trigger computer move
+                if (gameState.state === 'computer_turn') {
+                    setTimeout(triggerComputerMove, 800);
+                }
+            } catch (error) {
+                console.error('Error making move:', error);
+            }
+        }
+
+        async function triggerComputerMove() {
+            try {
+                const response = await fetch('/api/computer-move', { method: 'POST' });
+                gameState = await response.json();
+                soundManager.playComputerPlace();
+
+                const isLoss = gameState.state === 'computer_wins';
+                const isDraw = gameState.state === 'draw';
+                updateUI(isLoss || isDraw);
+
+                // Start countdown for next player turn
+                if (gameState.state === 'player_turn') {
+                    startCountdown(gameState.countdown_seconds);
+                }
+            } catch (error) {
+                console.error('Error with computer move:', error);
+            }
+        }
+
+        // New game
+        async function newGame(difficulty = null) {
+            stopCountdown();
+            boardInvisible = false;
+            soundManager.playNewGame();
+
+            const body = difficulty ? JSON.stringify({ difficulty }) : '{}';
+
+            try {
+                const response = await fetch('/api/new-game', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body
+                });
+                gameState = await response.json();
+                updateUI();
+                startCountdown(gameState.countdown_seconds);
+            } catch (error) {
+                console.error('Error starting new game:', error);
+            }
+        }
+
+        // Set difficulty
+        async function setDifficulty(difficulty) {
+            soundManager.playClick();
+
+            try {
+                const response = await fetch('/api/difficulty', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ difficulty })
+                });
+                gameState = await response.json();
+                updateUI();
+
+                // Restart countdown with new time if in player turn
+                if (gameState.state === 'player_turn') {
+                    startCountdown(gameState.countdown_seconds);
+                }
+            } catch (error) {
+                console.error('Error setting difficulty:', error);
+            }
+        }
+
+        // Event listeners
+        document.getElementById('new-game-btn').addEventListener('click', () => newGame());
+
+        document.getElementById('sound-toggle').addEventListener('click', () => {
+            const enabled = soundManager.toggle();
+            document.getElementById('sound-toggle').textContent = enabled ? '🔊' : '🔇';
+        });
+
+        document.querySelectorAll('.difficulty-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                setDifficulty(btn.dataset.difficulty);
+            });
+        });
+
+        // Initialize
+        initBoard();
+        fetchState().then(() => {
+            if (gameState && gameState.state === 'player_turn') {
+                startCountdown(gameState.countdown_seconds);
+            }
+        });
+    </script>
+</body>
+</html>

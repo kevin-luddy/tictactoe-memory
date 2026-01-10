@@ -1,0 +1,84 @@
+PROGRAM ComputerAI
+BEGIN
+    // Simple AI that blocks wins and takes winning moves
+
+    FUNCTION CalculateBestMove(game) RETURNS INTEGER
+    BEGIN
+        emptyPositions = game.GetEmptyPositions()
+
+        // Priority 1: Win if possible
+        FOR EACH pos IN emptyPositions
+            game.board[pos] = O
+            IF game.CheckWin(O) THEN
+                game.board[pos] = EMPTY
+                RETURN pos
+            END IF
+            game.board[pos] = EMPTY
+        END FOR
+
+        // Priority 2: Block player win
+        FOR EACH pos IN emptyPositions
+            game.board[pos] = X
+            IF game.CheckWin(X) THEN
+                game.board[pos] = EMPTY
+                RETURN pos
+            END IF
+            game.board[pos] = EMPTY
+        END FOR
+
+        // Priority 3: Take center if available
+        IF game.board[4] == EMPTY THEN
+            RETURN 4
+        END IF
+
+        // Priority 4: Take a corner if available
+        corners = [0, 2, 6, 8]
+        FOR EACH corner IN corners
+            IF game.board[corner] == EMPTY THEN
+                RETURN corner
+            END IF
+        END FOR
+
+        // Priority 5: Take any edge
+        edges = [1, 3, 5, 7]
+        FOR EACH edge IN edges
+            IF game.board[edge] == EMPTY THEN
+                RETURN edge
+            END IF
+        END FOR
+
+        // Fallback: first empty
+        RETURN emptyPositions[0]
+    END
+END
+
+
+PROGRAM PlayerStats
+BEGIN
+    DECLARE winStreak AS INTEGER = 0
+    DECLARE bestStreak AS INTEGER = 0
+    DECLARE gamesPlayed AS INTEGER = 0
+    DECLARE gamesWon AS INTEGER = 0
+
+    FUNCTION RecordWin()
+    BEGIN
+        gamesPlayed = gamesPlayed + 1
+        gamesWon = gamesWon + 1
+        winStreak = winStreak + 1
+        IF winStreak > bestStreak THEN
+            bestStreak = winStreak
+        END IF
+    END
+
+    FUNCTION RecordLoss()
+    BEGIN
+        gamesPlayed = gamesPlayed + 1
+        winStreak = 0  // Reset streak on loss
+    END
+
+    FUNCTION RecordDraw()
+    BEGIN
+        gamesPlayed = gamesPlayed + 1
+        // Draw doesn't affect streak
+    END
+END

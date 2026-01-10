@@ -1,0 +1,109 @@
+PROGRAM WebInterface
+BEGIN
+    // Frontend handles countdown, visibility, and sounds
+
+    DECLARE countdownTimer AS Timer
+    DECLARE soundManager AS SoundManager
+    DECLARE boardVisible AS BOOLEAN = TRUE
+
+    FUNCTION RenderBoard(game)
+    BEGIN
+        FOR i = 0 TO 8
+            cell = GetCellElement(i)
+            IF boardVisible THEN
+                cell.ShowMark(game.board[i])
+            ELSE
+                cell.HideMark()  // Transparent/invisible
+            END IF
+        END FOR
+    END
+
+    FUNCTION StartCountdown(seconds)
+    BEGIN
+        countdownDisplay.Show(seconds)
+        countdownTimer.Start(seconds, OnTick, OnComplete)
+    END
+
+    FUNCTION OnTick(remaining)
+    BEGIN
+        countdownDisplay.Update(remaining)
+        IF remaining <= 3 THEN
+            soundManager.PlayTick()  // Warning beeps
+        END IF
+    END
+
+    FUNCTION OnComplete()
+    BEGIN
+        boardVisible = FALSE
+        soundManager.PlayVanish()  // Fun disappear sound
+        RenderBoard(game)
+    END
+
+    FUNCTION OnPlayerClick(position)
+    BEGIN
+        result = API.PlayerMove(position)
+        IF result.success THEN
+            boardVisible = TRUE
+            countdownTimer.Stop()
+            soundManager.PlayPlace()
+            RenderBoard(game)
+
+            IF result.state == PLAYER_WINS THEN
+                soundManager.PlayWin()  // Celebration sound
+                ShowWinAnimation(result.winning_cells)
+            ELSE IF result.state != GAME_OVER THEN
+                TriggerComputerMove()
+            END IF
+        END IF
+    END
+
+    FUNCTION TriggerComputerMove()
+    BEGIN
+        Wait(500)  // Brief delay for effect
+        result = API.ComputerMove()
+        soundManager.PlayPlace()
+        RenderBoard(game)
+
+        IF result.state == COMPUTER_WINS THEN
+            soundManager.PlayLose()  // Encouraging sound
+        ELSE IF result.state == DRAW THEN
+            soundManager.PlayDraw()
+        ELSE
+            StartCountdown(game.countdownSeconds)
+        END IF
+    END
+END
+
+
+PROGRAM SoundManager
+BEGIN
+    // Kid-friendly sounds using Web Audio API
+
+    FUNCTION PlayPlace()
+        // Pop sound when placing mark
+    END
+
+    FUNCTION PlayTick()
+        // Soft tick for countdown
+    END
+
+    FUNCTION PlayVanish()
+        // Magical disappear sound
+    END
+
+    FUNCTION PlayWin()
+        // Cheerful victory fanfare
+    END
+
+    FUNCTION PlayLose()
+        // Gentle, encouraging "try again" sound
+    END
+
+    FUNCTION PlayDraw()
+        // Neutral completion sound
+    END
+
+    FUNCTION PlayNewGame()
+        // Fresh start sound
+    END
+END

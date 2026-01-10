@@ -1,0 +1,76 @@
+PROGRAM TicTacToeController
+BEGIN
+    DECLARE game AS TicTacToeGame
+    DECLARE stats AS PlayerStats
+
+    FUNCTION StartNewGame(difficulty)
+    BEGIN
+        game.Reset()
+        game.SetDifficulty(difficulty)
+        game.SetState(PLAYER_TURN)
+        game.StartCountdown()
+        RETURN game.GetState()
+    END
+
+    FUNCTION PlayerMove(position)
+    BEGIN
+        IF game.state != PLAYER_TURN AND game.state != INVISIBLE THEN
+            RETURN Error("Not player's turn")
+        END IF
+
+        IF game.board[position] != EMPTY THEN
+            RETURN Error("Position occupied")
+        END IF
+
+        game.PlaceMark(position, X)
+        game.StopCountdown()
+        game.SetBoardVisible(TRUE)
+
+        IF game.CheckWin(X) THEN
+            stats.RecordWin()
+            game.SetState(PLAYER_WINS)
+            RETURN GameOver("You win!")
+        END IF
+
+        IF game.IsBoardFull() THEN
+            game.SetState(DRAW)
+            RETURN GameOver("Draw!")
+        END IF
+
+        game.SetState(COMPUTER_TURN)
+        RETURN game.GetState()
+    END
+
+    FUNCTION ComputerMove()
+    BEGIN
+        IF game.state != COMPUTER_TURN THEN
+            RETURN Error("Not computer's turn")
+        END IF
+
+        position = CalculateBestMove()
+        game.PlaceMark(position, O)
+
+        IF game.CheckWin(O) THEN
+            stats.RecordLoss()
+            game.SetState(COMPUTER_WINS)
+            RETURN GameOver("Computer wins!")
+        END IF
+
+        IF game.IsBoardFull() THEN
+            game.SetState(DRAW)
+            RETURN GameOver("Draw!")
+        END IF
+
+        game.SetState(PLAYER_TURN)
+        game.StartCountdown()
+        RETURN game.GetState()
+    END
+
+    FUNCTION OnCountdownEnd()
+    BEGIN
+        IF game.state == PLAYER_TURN THEN
+            game.SetBoardVisible(FALSE)
+            game.SetState(INVISIBLE)
+        END IF
+    END
+END
