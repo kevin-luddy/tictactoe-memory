@@ -42,6 +42,7 @@ class GameStateResponse(BaseModel):
     best_streak: int
     games_played: int
     games_won: int
+    loss_streak: int = 0
     message: str = ""
 
 
@@ -61,6 +62,7 @@ def make_response(message: str = "") -> GameStateResponse:
         best_streak=state["best_streak"],
         games_played=state["games_played"],
         games_won=state["games_won"],
+        loss_streak=state["loss_streak"],
         message=message
     )
 

@@ -77,6 +77,8 @@ class TicTacToeGame:
     best_streak: int = 0
     games_played: int = 0
     games_won: int = 0
+    loss_streak: int = 0  # Track consecutive losses
+    current_countdown: int = 10  # Dynamic countdown (adjusts with wins/losses)
 
     def __post_init__(self):
         if not self.board:
@@ -93,13 +95,14 @@ class TicTacToeGame:
         # Keep difficulty and stats
 
     def set_difficulty(self, difficulty: Difficulty):
-        """Set the difficulty level (affects countdown time)."""
+        """Set the difficulty level (affects initial countdown time)."""
         self.difficulty = difficulty
+        self.current_countdown = COUNTDOWN_TIMES[difficulty]
         self.countdown_seconds = COUNTDOWN_TIMES[difficulty]
 
     def get_countdown_seconds(self) -> int:
-        """Get countdown seconds for current difficulty."""
-        return COUNTDOWN_TIMES[self.difficulty]
+        """Get countdown seconds (dynamic, adjusts with wins/losses)."""
+        return self.current_countdown
 
     def set_board_visible(self, visible: bool):
         """Set whether the board marks are visible."""
@@ -234,17 +237,26 @@ class TicTacToeGame:
         return empty[0]
 
     def _record_game_result(self, won: bool, draw: bool = False):
-        """Record game result for streak tracking."""
+        """Record game result for streak tracking and countdown adjustment."""
         self.games_played += 1
         if won:
             self.games_won += 1
             self.win_streak += 1
+            self.loss_streak = 0  # Reset loss streak
             if self.win_streak > self.best_streak:
                 self.best_streak = self.win_streak
+            # Reduce countdown by 1 on win (minimum 1)
+            if self.current_countdown > 1:
+                self.current_countdown -= 1
         elif not draw:
-            # Loss resets streak
+            # Loss resets win streak
             self.win_streak = 0
-        # Draw doesn't affect streak
+            self.loss_streak += 1
+            # Increase countdown by 1 after 3 consecutive losses (max 10)
+            if self.loss_streak >= 3 and self.current_countdown < 10:
+                self.current_countdown += 1
+                self.loss_streak = 0  # Reset after adjustment
+        # Draw doesn't affect streaks or countdown
 
     def get_board_state(self) -> dict:
         """Get current state as dictionary for JSON serialization."""
@@ -252,7 +264,7 @@ class TicTacToeGame:
             "board": [cell.value for cell in self.board],
             "state": self.state.value,
             "difficulty": self.difficulty.value,
-            "countdown_seconds": self.get_countdown_seconds(),
+            "countdown_seconds": self.current_countdown,
             "board_visible": self.board_visible,
             "winner": self.winner.value if self.winner else None,
             "winning_cells": self.winning_cells,
@@ -261,6 +273,7 @@ class TicTacToeGame:
             "best_streak": self.best_streak,
             "games_played": self.games_played,
             "games_won": self.games_won,
+            "loss_streak": self.loss_streak,
         }
 
     def set_board_for_testing(self, positions: List[int], mark: Mark):

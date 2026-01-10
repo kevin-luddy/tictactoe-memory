@@ -260,6 +260,62 @@
             transition: opacity 0.5s ease;
         }
 
+        /* X and O appear animations */
+        .cell .mark.pop-in {
+            animation: popIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: scale(0) rotate(-180deg);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.3) rotate(10deg);
+            }
+            100% {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+
+        /* Waiting for invisibility state */
+        .cell.waiting {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .cell.waiting:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Board locked overlay */
+        .board.locked::after {
+            content: "Wait for pieces to vanish!";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 15px;
+            font-size: 1rem;
+            white-space: nowrap;
+            z-index: 10;
+            animation: fadeInOut 2s ease-in-out infinite;
+        }
+
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        .board {
+            position: relative;
+        }
+
         /* Controls */
         .controls {
             display: flex;
@@ -361,7 +417,7 @@
     </div>
 
     <div class="countdown-container">
-        <div class="countdown-label">Time until pieces vanish:</div>
+        <div class="countdown-label">Time until pieces vanish: <span id="countdown-setting" style="color: #ffd700;">(10s)</span></div>
         <div id="countdown" class="countdown">10</div>
     </div>
 
@@ -546,14 +602,40 @@
                 }
             });
 
+            // Update countdown setting display
+            document.getElementById('countdown-setting').textContent = `(${countdown_seconds}s)`;
+
             // Update board cells
             const cells = document.querySelectorAll('.cell');
+            const boardEl = document.getElementById('board');
+
+            // Lock board when player must wait for invisibility
+            const mustWaitForInvisible = state === 'player_turn';
+            const canMakeMove = state === 'invisible';
+
+            if (mustWaitForInvisible) {
+                boardEl.classList.add('locked');
+            } else {
+                boardEl.classList.remove('locked');
+            }
+
             cells.forEach((cell, i) => {
                 const mark = board[i];
                 const markSpan = cell.querySelector('.mark');
-                markSpan.textContent = mark;
+                const previousMark = markSpan.textContent;
 
-                cell.classList.remove('x', 'o', 'winning', 'invisible');
+                // Check if this is a new mark (for animation)
+                if (mark !== '' && previousMark !== mark) {
+                    markSpan.textContent = mark;
+                    markSpan.classList.remove('pop-in');
+                    // Trigger reflow to restart animation
+                    void markSpan.offsetWidth;
+                    markSpan.classList.add('pop-in');
+                } else {
+                    markSpan.textContent = mark;
+                }
+
+                cell.classList.remove('x', 'o', 'winning', 'invisible', 'waiting');
 
                 if (mark === 'X') {
                     cell.classList.add('x');
@@ -566,15 +648,20 @@
                     cell.classList.add('invisible');
                 }
 
+                // Show waiting state when player must wait
+                if (mustWaitForInvisible && mark === '') {
+                    cell.classList.add('waiting');
+                }
+
                 // Highlight winning cells
                 if (winning_cells && winning_cells.includes(i)) {
                     cell.classList.add('winning');
                 }
 
-                // Disable cells based on game state
+                // Disable cells - only allow moves when INVISIBLE
                 const isGameOver = ['player_wins', 'computer_wins', 'draw'].includes(state);
-                const isPlayerTurn = ['player_turn', 'invisible'].includes(state);
-                cell.disabled = !isPlayerTurn || mark !== '' || isGameOver;
+                // Key change: only allow moves when state is 'invisible'
+                cell.disabled = !canMakeMove || mark !== '' || isGameOver;
             });
 
             // Update message
@@ -582,21 +669,27 @@
             messageEl.classList.remove('win');
 
             if (state === 'player_wins') {
-                messageEl.textContent = '🎉 You Win! Great memory! 🎉';
+                const newTime = countdown_seconds;
+                messageEl.textContent = `🎉 You Win! Next: ${newTime}s countdown! 🎉`;
                 messageEl.classList.add('win');
                 if (playEndSound) soundManager.playWin();
             } else if (state === 'computer_wins') {
-                messageEl.textContent = '🤖 Computer wins! Try again! 💪';
+                const lossStreak = gameState.loss_streak || 0;
+                let msg = '🤖 Computer wins! Try again! 💪';
+                if (lossStreak >= 2) {
+                    msg = `🤖 Computer wins! (${3 - lossStreak} more = easier) 💪`;
+                }
+                messageEl.textContent = msg;
                 if (playEndSound) soundManager.playLose();
             } else if (state === 'draw') {
                 messageEl.textContent = "🤝 It's a Draw! Good game! 🤝";
                 if (playEndSound) soundManager.playDraw();
             } else if (state === 'invisible') {
-                messageEl.textContent = '🧠 Pieces invisible! Use your memory!';
+                messageEl.textContent = '🧠 Pieces invisible! CLICK NOW!';
             } else if (state === 'computer_turn') {
                 messageEl.textContent = '🤔 Computer is thinking...';
             } else if (state === 'player_turn') {
-                messageEl.textContent = '👆 Your turn! Watch the countdown!';
+                messageEl.textContent = `⏳ Wait for countdown... (${countdown_seconds}s)`;
             }
 
             // Handle countdown visibility
@@ -683,7 +776,14 @@
             if (!gameState) return;
 
             const { state, board } = gameState;
-            if (!['player_turn', 'invisible'].includes(state)) return;
+            // Only allow moves when board is INVISIBLE (memory challenge!)
+            if (state !== 'invisible') {
+                // Show feedback that user must wait
+                if (state === 'player_turn') {
+                    soundManager.playClick();
+                }
+                return;
+            }
             if (board[position] !== '') return;
 
             soundManager.playPlace();
