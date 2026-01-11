@@ -36,6 +36,29 @@ COUNTDOWN_TIMES = {
     Difficulty.HARD: 1,
 }
 
+# Token rewards
+TOKEN_REWARDS = {
+    "win_easy": 5,
+    "win_medium": 10,
+    "win_hard": 20,
+    "streak_bonus": 5,  # Per win in streak (multiplied by streak count)
+    "draw": 2,
+}
+
+# Avatar definitions: (name, emoji, cost, description)
+AVATARS = [
+    {"id": "egg", "name": "Egg", "emoji": "🥒", "cost": 0, "description": "Just starting out!"},
+    {"id": "chick", "name": "Chick", "emoji": "🐣", "cost": 25, "description": "Hatching your skills!"},
+    {"id": "chicken", "name": "Chicken", "emoji": "🐔", "cost": 50, "description": "Getting stronger!"},
+    {"id": "rooster", "name": "Rooster", "emoji": "🐓", "cost": 100, "description": "Rise and shine!"},
+    {"id": "eagle", "name": "Eagle", "emoji": "🦅", "cost": 200, "description": "Soaring high!"},
+    {"id": "dragon", "name": "Dragon", "emoji": "🐲", "cost": 350, "description": "Legendary power!"},
+    {"id": "unicorn", "name": "Unicorn", "emoji": "🦄", "cost": 500, "description": "Magical master!"},
+    {"id": "alien", "name": "Alien", "emoji": "👽", "cost": 750, "description": "Out of this world!"},
+    {"id": "robot", "name": "Robot", "emoji": "🤖", "cost": 1000, "description": "Supreme intelligence!"},
+    {"id": "crown", "name": "Champion", "emoji": "👑", "cost": 1500, "description": "The ultimate champion!"},
+]
+
 
 # All possible winning patterns (indices 0-8)
 WIN_PATTERNS = [
@@ -79,6 +102,12 @@ class TicTacToeGame:
     games_won: int = 0
     loss_streak: int = 0  # Track consecutive losses
     current_countdown: int = 10  # Dynamic countdown (adjusts with wins/losses)
+
+    # Reward system
+    tokens: int = 0
+    total_tokens_earned: int = 0
+    current_avatar: str = "egg"
+    unlocked_avatars: List[str] = field(default_factory=lambda: ["egg"])
 
     def __post_init__(self):
         if not self.board:
@@ -237,8 +266,10 @@ class TicTacToeGame:
         return empty[0]
 
     def _record_game_result(self, won: bool, draw: bool = False):
-        """Record game result for streak tracking and countdown adjustment."""
+        """Record game result for streak tracking, countdown adjustment, and token rewards."""
         self.games_played += 1
+        tokens_earned = 0
+
         if won:
             self.games_won += 1
             self.win_streak += 1
@@ -248,7 +279,23 @@ class TicTacToeGame:
             # Reduce countdown by 1 on win (minimum 1)
             if self.current_countdown > 1:
                 self.current_countdown -= 1
-        elif not draw:
+
+            # Award tokens based on difficulty
+            if self.difficulty == Difficulty.EASY:
+                tokens_earned = TOKEN_REWARDS["win_easy"]
+            elif self.difficulty == Difficulty.MEDIUM:
+                tokens_earned = TOKEN_REWARDS["win_medium"]
+            else:
+                tokens_earned = TOKEN_REWARDS["win_hard"]
+
+            # Streak bonus (extra tokens for consecutive wins)
+            if self.win_streak > 1:
+                tokens_earned += TOKEN_REWARDS["streak_bonus"] * (self.win_streak - 1)
+
+        elif draw:
+            # Small reward for draw
+            tokens_earned = TOKEN_REWARDS["draw"]
+        else:
             # Loss resets win streak
             self.win_streak = 0
             self.loss_streak += 1
@@ -256,10 +303,67 @@ class TicTacToeGame:
             if self.loss_streak >= 3 and self.current_countdown < 10:
                 self.current_countdown += 1
                 self.loss_streak = 0  # Reset after adjustment
-        # Draw doesn't affect streaks or countdown
+
+        # Add tokens
+        self.tokens += tokens_earned
+        self.total_tokens_earned += tokens_earned
+
+    def purchase_avatar(self, avatar_id: str) -> dict:
+        """Purchase an avatar with tokens."""
+        # Find the avatar
+        avatar = None
+        for a in AVATARS:
+            if a["id"] == avatar_id:
+                avatar = a
+                break
+
+        if not avatar:
+            return {"success": False, "message": "Avatar not found"}
+
+        if avatar_id in self.unlocked_avatars:
+            return {"success": False, "message": "Avatar already unlocked"}
+
+        if self.tokens < avatar["cost"]:
+            return {"success": False, "message": f"Not enough tokens! Need {avatar['cost']}, have {self.tokens}"}
+
+        # Purchase successful
+        self.tokens -= avatar["cost"]
+        self.unlocked_avatars.append(avatar_id)
+        self.current_avatar = avatar_id
+
+        return {
+            "success": True,
+            "message": f"Unlocked {avatar['name']}!",
+            "avatar": avatar
+        }
+
+    def set_avatar(self, avatar_id: str) -> dict:
+        """Set the current avatar (must be unlocked)."""
+        if avatar_id not in self.unlocked_avatars:
+            return {"success": False, "message": "Avatar not unlocked"}
+
+        self.current_avatar = avatar_id
+        return {"success": True, "message": "Avatar changed!"}
+
+    def get_current_avatar(self) -> dict:
+        """Get the current avatar info."""
+        for avatar in AVATARS:
+            if avatar["id"] == self.current_avatar:
+                return avatar
+        return AVATARS[0]  # Default to egg
+
+    def get_shop_data(self) -> dict:
+        """Get avatar shop data."""
+        return {
+            "tokens": self.tokens,
+            "current_avatar": self.current_avatar,
+            "unlocked_avatars": self.unlocked_avatars,
+            "avatars": AVATARS
+        }
 
     def get_board_state(self) -> dict:
         """Get current state as dictionary for JSON serialization."""
+        current_avatar = self.get_current_avatar()
         return {
             "board": [cell.value for cell in self.board],
             "state": self.state.value,
@@ -274,6 +378,10 @@ class TicTacToeGame:
             "games_played": self.games_played,
             "games_won": self.games_won,
             "loss_streak": self.loss_streak,
+            "tokens": self.tokens,
+            "total_tokens_earned": self.total_tokens_earned,
+            "current_avatar": current_avatar,
+            "unlocked_avatars": self.unlocked_avatars,
         }
 
     def set_board_for_testing(self, positions: List[int], mark: Mark):

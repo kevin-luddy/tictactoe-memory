@@ -346,7 +346,7 @@
             box-shadow: 0 10px 30px rgba(34, 197, 94, 0.4);
         }
 
-        #sound-toggle, #help-btn {
+        #sound-toggle, #help-btn, #shop-btn {
             background: rgba(255, 255, 255, 0.2);
             color: white;
             width: 50px;
@@ -358,7 +358,7 @@
             justify-content: center;
         }
 
-        #sound-toggle:hover, #help-btn:hover {
+        #sound-toggle:hover, #help-btn:hover, #shop-btn:hover {
             background: rgba(255, 255, 255, 0.3);
         }
 
@@ -545,11 +545,242 @@
             background: rgba(255, 255, 255, 0.3);
             transform: scale(1.02);
         }
+
+        /* Avatar and Token Display */
+        .player-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 25px;
+            backdrop-filter: blur(10px);
+        }
+
+        .avatar-display {
+            font-size: 2.5rem;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+
+        .avatar-display:hover {
+            transform: scale(1.2);
+        }
+
+        .token-display {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            color: #333;
+            box-shadow: 0 3px 10px rgba(255, 215, 0, 0.4);
+        }
+
+        .token-icon {
+            font-size: 1.3rem;
+        }
+
+        .token-count {
+            font-size: 1.2rem;
+        }
+
+        /* Shop Modal */
+        .shop-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .shop-modal.show {
+            display: flex;
+        }
+
+        .shop-content {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 25px;
+            padding: 25px;
+            max-width: 450px;
+            width: 95%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: popIn 0.3s ease;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .shop-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .shop-header h2 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .shop-tokens {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        .avatar-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .avatar-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .avatar-card:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-3px);
+        }
+
+        .avatar-card.owned {
+            border-color: #4ade80;
+            background: rgba(74, 222, 128, 0.15);
+        }
+
+        .avatar-card.selected {
+            border-color: #ffd700;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+        }
+
+        .avatar-card.locked {
+            opacity: 0.6;
+        }
+
+        .avatar-card.affordable {
+            border-color: rgba(255, 215, 0, 0.5);
+        }
+
+        .avatar-emoji {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .avatar-name {
+            font-weight: bold;
+            font-size: 0.95rem;
+            margin-bottom: 5px;
+        }
+
+        .avatar-cost {
+            font-size: 0.85rem;
+            color: #ffd700;
+        }
+
+        .avatar-cost.free {
+            color: #4ade80;
+        }
+
+        .avatar-desc {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 5px;
+        }
+
+        .shop-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .shop-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 15px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .shop-btn.buy {
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            color: #333;
+        }
+
+        .shop-btn.buy:disabled {
+            background: #666;
+            color: #999;
+            cursor: not-allowed;
+        }
+
+        .shop-btn.close {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .shop-btn:hover:not(:disabled) {
+            transform: scale(1.02);
+        }
+
+        .token-earned {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+            animation: tokenPop 1.5s ease forwards;
+            pointer-events: none;
+            z-index: 3000;
+        }
+
+        @keyframes tokenPop {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+            80% { opacity: 1; transform: translate(-50%, -70%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -90%) scale(0.8); }
+        }
     </style>
 </head>
 <body>
     <h1>TicTacToe Memory</h1>
     <p class="subtitle">Remember where the pieces are!</p>
+
+    <!-- Player Avatar and Tokens -->
+    <div class="player-info">
+        <span id="player-avatar" class="avatar-display" title="Open Shop">🥚</span>
+        <div class="token-display" id="token-display" title="Open Shop">
+            <span class="token-icon">🪙</span>
+            <span id="token-count" class="token-count">0</span>
+        </div>
+    </div>
 
     <div class="stats-display">
         <div class="stat-item">
@@ -600,6 +831,7 @@
         <button id="new-game-btn" class="btn">New Game</button>
         <button id="sound-toggle" class="btn" title="Toggle Sound">🔊</button>
         <button id="help-btn" class="btn" title="How to Play">❓</button>
+        <button id="shop-btn" class="btn" title="Avatar Shop">🛒</button>
     </div>
 
     <!-- Help Modal -->
@@ -648,6 +880,28 @@
         </div>
     </div>
 
+    <!-- Shop Modal -->
+    <div id="shop-modal" class="shop-modal">
+        <div class="shop-content">
+            <div class="shop-header">
+                <h2>🛒 Avatar Shop</h2>
+                <div class="shop-tokens">
+                    <span>🪙</span>
+                    <span id="shop-token-count">0</span>
+                </div>
+            </div>
+
+            <div class="avatar-grid" id="avatar-grid">
+                <!-- Avatars generated by JS -->
+            </div>
+
+            <div class="shop-buttons">
+                <button class="shop-btn buy" id="buy-btn" disabled>Select an Avatar</button>
+                <button class="shop-btn close" id="close-shop">Close</button>
+            </div>
+        </div>
+    </div>
+
     <canvas id="confetti-canvas"></canvas>
 
     <script>
@@ -660,6 +914,11 @@
         let currentDifficulty = 'easy';
         let flashDuration = 2000; // Start at 2 seconds for medium/hard
         let isFlashMode = false; // true for medium/hard
+
+        // Shop state
+        let shopData = null;
+        let selectedAvatar = null;
+        let previousTokens = 0;
 
         // Confetti class
         class Confetti {
@@ -895,13 +1154,27 @@
             if (!gameState) return;
 
             const { board, state, difficulty, countdown_seconds, board_visible,
-                    winner, winning_cells, win_streak, best_streak, games_played, games_won } = gameState;
+                    winner, winning_cells, win_streak, best_streak, games_played, games_won,
+                    tokens, current_avatar, unlocked_avatars } = gameState;
 
             // Update stats
             document.getElementById('win-streak').textContent = win_streak;
             document.getElementById('best-streak').textContent = best_streak;
             document.getElementById('games-won').textContent = games_won;
             document.getElementById('games-played').textContent = games_played;
+
+            // Update tokens and avatar
+            document.getElementById('token-count').textContent = tokens;
+            if (current_avatar && current_avatar.emoji) {
+                document.getElementById('player-avatar').textContent = current_avatar.emoji;
+            }
+
+            // Show token earned animation
+            if (tokens > previousTokens && previousTokens > 0) {
+                const earned = tokens - previousTokens;
+                showTokenEarned(earned);
+            }
+            previousTokens = tokens;
 
             // Update difficulty buttons
             currentDifficulty = difficulty;
@@ -1319,6 +1592,153 @@
             }
         }
 
+        // Shop functions
+        function showTokenEarned(amount) {
+            const el = document.createElement('div');
+            el.className = 'token-earned';
+            el.textContent = `+${amount} 🪙`;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 1500);
+        }
+
+        async function loadShop() {
+            try {
+                const response = await fetch('/api/shop');
+                shopData = await response.json();
+                renderShop();
+            } catch (error) {
+                console.error('Error loading shop:', error);
+            }
+        }
+
+        function renderShop() {
+            if (!shopData) return;
+
+            document.getElementById('shop-token-count').textContent = shopData.tokens;
+
+            const grid = document.getElementById('avatar-grid');
+            grid.innerHTML = '';
+
+            shopData.avatars.forEach(avatar => {
+                const isOwned = shopData.unlocked_avatars.includes(avatar.id);
+                const isSelected = shopData.current_avatar === avatar.id;
+                const canAfford = shopData.tokens >= avatar.cost;
+
+                const card = document.createElement('div');
+                card.className = 'avatar-card';
+                if (isOwned) card.classList.add('owned');
+                if (isSelected) card.classList.add('selected');
+                if (!isOwned && !canAfford) card.classList.add('locked');
+                if (!isOwned && canAfford) card.classList.add('affordable');
+
+                card.innerHTML = `
+                    <span class="avatar-emoji">${avatar.emoji}</span>
+                    <div class="avatar-name">${avatar.name}</div>
+                    <div class="avatar-cost ${avatar.cost === 0 ? 'free' : ''}">
+                        ${isOwned ? '✓ Owned' : (avatar.cost === 0 ? 'Free!' : `🪙 ${avatar.cost}`)}
+                    </div>
+                    <div class="avatar-desc">${avatar.description}</div>
+                `;
+
+                card.addEventListener('click', () => selectAvatar(avatar, isOwned));
+                grid.appendChild(card);
+            });
+
+            updateBuyButton();
+        }
+
+        function selectAvatar(avatar, isOwned) {
+            selectedAvatar = { ...avatar, isOwned };
+            soundManager.playClick();
+
+            // Update visual selection
+            document.querySelectorAll('.avatar-card').forEach((card, i) => {
+                card.classList.remove('selected');
+                if (shopData.avatars[i].id === avatar.id) {
+                    card.classList.add('selected');
+                }
+            });
+
+            updateBuyButton();
+        }
+
+        function updateBuyButton() {
+            const btn = document.getElementById('buy-btn');
+
+            if (!selectedAvatar) {
+                btn.textContent = 'Select an Avatar';
+                btn.disabled = true;
+                return;
+            }
+
+            if (selectedAvatar.isOwned) {
+                if (shopData.current_avatar === selectedAvatar.id) {
+                    btn.textContent = '✓ Current Avatar';
+                    btn.disabled = true;
+                } else {
+                    btn.textContent = `Use ${selectedAvatar.name}`;
+                    btn.disabled = false;
+                }
+            } else {
+                const canAfford = shopData.tokens >= selectedAvatar.cost;
+                btn.textContent = canAfford ? `Buy ${selectedAvatar.name} (🪙${selectedAvatar.cost})` : `Need 🪙${selectedAvatar.cost - shopData.tokens} more`;
+                btn.disabled = !canAfford;
+            }
+        }
+
+        async function buyOrUseAvatar() {
+            if (!selectedAvatar) return;
+
+            try {
+                if (selectedAvatar.isOwned) {
+                    // Just switch to this avatar
+                    const response = await fetch('/api/set-avatar', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ avatar_id: selectedAvatar.id })
+                    });
+                    const result = await response.json();
+                    if (response.ok) {
+                        soundManager.playWin();
+                        shopData.current_avatar = selectedAvatar.id;
+                        document.getElementById('player-avatar').textContent = selectedAvatar.emoji;
+                    }
+                } else {
+                    // Purchase avatar
+                    const response = await fetch('/api/purchase-avatar', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ avatar_id: selectedAvatar.id })
+                    });
+                    const result = await response.json();
+                    if (response.ok) {
+                        soundManager.playWin();
+                        shopData.tokens = result.tokens;
+                        shopData.unlocked_avatars = result.unlocked_avatars;
+                        shopData.current_avatar = selectedAvatar.id;
+                        selectedAvatar.isOwned = true;
+                        document.getElementById('player-avatar').textContent = selectedAvatar.emoji;
+                        document.getElementById('token-count').textContent = result.tokens;
+                    }
+                }
+                renderShop();
+            } catch (error) {
+                console.error('Error with avatar:', error);
+            }
+        }
+
+        function openShop() {
+            soundManager.playClick();
+            loadShop();
+            document.getElementById('shop-modal').classList.add('show');
+        }
+
+        function closeShop() {
+            soundManager.playClick();
+            document.getElementById('shop-modal').classList.remove('show');
+            selectedAvatar = null;
+        }
+
         // Event listeners
         document.getElementById('new-game-btn').addEventListener('click', () => newGame());
 
@@ -1341,6 +1761,18 @@
         document.getElementById('help-modal').addEventListener('click', (e) => {
             if (e.target === e.currentTarget) {
                 document.getElementById('help-modal').classList.remove('show');
+            }
+        });
+
+        // Shop modal
+        document.getElementById('shop-btn').addEventListener('click', openShop);
+        document.getElementById('player-avatar').addEventListener('click', openShop);
+        document.getElementById('token-display').addEventListener('click', openShop);
+        document.getElementById('close-shop').addEventListener('click', closeShop);
+        document.getElementById('buy-btn').addEventListener('click', buyOrUseAvatar);
+        document.getElementById('shop-modal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) {
+                closeShop();
             }
         });
 

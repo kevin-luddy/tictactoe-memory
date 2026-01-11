@@ -44,6 +44,14 @@ class GameStateResponse(BaseModel):
     games_won: int
     loss_streak: int = 0
     message: str = ""
+    tokens: int = 0
+    total_tokens_earned: int = 0
+    current_avatar: dict = {}
+    unlocked_avatars: list = []
+
+
+class AvatarRequest(BaseModel):
+    avatar_id: str
 
 
 def make_response(message: str = "") -> GameStateResponse:
@@ -63,7 +71,11 @@ def make_response(message: str = "") -> GameStateResponse:
         games_played=state["games_played"],
         games_won=state["games_won"],
         loss_streak=state["loss_streak"],
-        message=message
+        message=message,
+        tokens=state["tokens"],
+        total_tokens_earned=state["total_tokens_earned"],
+        current_avatar=state["current_avatar"],
+        unlocked_avatars=state["unlocked_avatars"]
     )
 
 
@@ -133,6 +145,30 @@ async def set_invisible():
     """Set board to invisible mode (called when countdown ends)."""
     game.set_board_visible(False)
     return make_response("Board is now invisible! Make your move from memory!")
+
+
+@app.get("/api/shop")
+async def get_shop():
+    """Get avatar shop data."""
+    return game.get_shop_data()
+
+
+@app.post("/api/purchase-avatar")
+async def purchase_avatar(request: AvatarRequest):
+    """Purchase an avatar with tokens."""
+    result = game.purchase_avatar(request.avatar_id)
+    if not result["success"]:
+        raise HTTPException(status_code=400, detail=result["message"])
+    return {**result, "tokens": game.tokens, "unlocked_avatars": game.unlocked_avatars}
+
+
+@app.post("/api/set-avatar")
+async def set_avatar(request: AvatarRequest):
+    """Set the current avatar (must be unlocked)."""
+    result = game.set_avatar(request.avatar_id)
+    if not result["success"]:
+        raise HTTPException(status_code=400, detail=result["message"])
+    return {**result, "current_avatar": game.get_current_avatar()}
 
 
 # Mount static files
